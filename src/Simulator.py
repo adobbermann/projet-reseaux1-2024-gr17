@@ -6,25 +6,31 @@ import time
 
 class Simulator:
 
+    # définition du réseau 
     def __init__(self):
+        #Instanciation de liste vides (hôtes, routeurs, liens) => permettant de définir le réseau 
         self.hosts = {}
         self.routers = {}
         self.links = {}
 
+    # méthode permettant d'ajouter un hôte au réseau
     def add_host(self, host_id):
         self.hosts[host_id] = h.Host(host_id)
 
+    # méthode permettant d'ajouter un routeur au réseau
     def add_router(self, router_id, queue_size):
         self.routers[router_id] = r.Router(router_id, queue_size)
         print(
             f'router {router_id} has been added: \nrouter_id: {router_id} \nqueue_size:{queue_size}\n')
 
+     # méthode permettant d'ajouter un lien au réseau
     def add_link(self, link_id, distance, propagation_delay=1000, transmission_delay=1000):
         self.links[link_id] = l.Link(
             distance, propagation_delay, transmission_delay)
         print(f'link {link_id} has been added: \ndistance: {
               distance} \npropagation_delay: {propagation_delay}bps \ntransmission_delay: {transmission_delay}bps\n')
 
+    # méthode permettant l'envoie de packet d'un 
     def send_packet(self, source, destination, packet):
         print(f'destination: {destination}')
         print(f'routers: {self.routers}')
