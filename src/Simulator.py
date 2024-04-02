@@ -27,8 +27,8 @@ class Simulator:
     def add_link(self, link_id, distance, propagation_delay=1000, transmission_delay=1000):
         self.links[link_id] = l.Link(
             distance, propagation_delay, transmission_delay)
-        print(f'link {link_id} has been added: \ndistance: {
-              distance} \npropagation_delay: {propagation_delay}bps \ntransmission_delay: {transmission_delay}bps\n')
+        print(f"""link {link_id} has been added: \ndistance: {
+              distance} \npropagation_delay: {propagation_delay}bps \ntransmission_delay: {transmission_delay}bps\n""")
 
     # méthode permettant l'envoie de packet d'un 
     def send_packet(self, source, destination, packet):
@@ -55,8 +55,8 @@ class Simulator:
             link = self.links[link_id]
 
             if (packet.size > link.distance):
-                print(f"packet size is bigger than l{
-                      link_id}: (packet size: {packet.size}, link distance: {link.distance})")
+                print(f"""packet size is bigger than l{
+                      link_id}: (packet size: {packet.size}, link distance: {link.distance})""")
 
             transmission_delay = link.transmission_delay(packet.size)
             propagation_delay = link.propagation_delay()
