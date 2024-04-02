@@ -48,6 +48,10 @@ class Simulator:
         for link_id in path:
             link = self.links[link_id]
 
+            if (packet.size > link.distance):
+                print(f"packet size is bigger than l{
+                      link_id}: (packet size: {packet.size}, link distance: {link.distance})")
+
             transmission_delay = link.transmission_delay(packet.size)
             propagation_delay = link.propagation_delay()
             time.sleep(transmission_delay + propagation_delay)
