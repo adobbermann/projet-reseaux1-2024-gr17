@@ -29,7 +29,12 @@ class Simulator:
     def add_link(self, link_id, distance, propagation_delay=1000, transmission_delay=1000):
         self.links[link_id] = l.Link(
             distance, propagation_delay, transmission_delay)
+<<<<<<< HEAD
         print(f'link {link_id} has been added: \ndistance: {distance}\n')
+=======
+        print(f"""link {link_id} has been added: \ndistance: {
+              distance} \npropagation_delay: {propagation_delay}bps \ntransmission_delay: {transmission_delay}bps\n""")
+>>>>>>> 546c85c2ff372ec59a21b987805f5072562c158c
 
     # TCP mécanisme
 
@@ -88,6 +93,7 @@ class Simulator:
             link = self.links[link_id]
 
             if (packet.size > link.distance):
+<<<<<<< HEAD
                 if (tcp is False):
                     print(f"packet size is bigger than l{
                         link_id}: (packet size: {packet.size}, link distance: {link.distance}) \nAborting...")
@@ -100,6 +106,10 @@ class Simulator:
                     print("LAUNCHING PIPELINING...")
                     self.tcp_mechanism(packet, link, link_id, tcp_reno)
                     return
+=======
+                print(f"""packet size is bigger than l{
+                      link_id}: (packet size: {packet.size}, link distance: {link.distance})""")
+>>>>>>> 546c85c2ff372ec59a21b987805f5072562c158c
 
             transmission_delay = link.transmission_delay(packet.size)
             propagation_delay = link.propagation_delay()
