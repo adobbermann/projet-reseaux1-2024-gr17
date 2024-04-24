@@ -1,8 +1,7 @@
 import queue
 
-
 class Router:
-    def __init__(self, queue_size, lifo=False):
+    def __init__(self, queue_size, lifo=True):
         self.queue = queue.LifoQueue(
             queue_size) if lifo else queue.Queue(queue_size)
 
