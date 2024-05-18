@@ -1,22 +1,23 @@
 class Link:
-    def __init__(self, connected_nodes, propagation_speed=2e8, transmission_rate=1000):
+    def __init__(self, connected_nodes, distance=5, propagation_speed=2e8, transmission_rate=1000):
+        self.distance = distance
         self.connected_nodes = connected_nodes
         self.propagation_speed = propagation_speed
         self.transmission_rate = transmission_rate
 
     def propagation_delay(self):
-        return sum([1 / self.propagation_speed for _ in self.connected_nodes])
+        return self.distance / self.propagation_speed
 
-    def transmission_delay(self, packets):
+    def transmission_delay(self, packets, bitrate):
         bits = 0
-        # print(f'packets: {packets[0]}')
+        # print(f'packets: {packets}')
         if (len(packets) > 1):
             for packet in packets:
                 bits += len(packet)*8
         else:
             bits += len(packets[0])*8
 
-        return bits / self.transmission_rate
+        return bits / bitrate
 
     def get_nodes(self):
         return self.connected_nodes

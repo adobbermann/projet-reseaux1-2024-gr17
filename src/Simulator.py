@@ -27,7 +27,7 @@ class Simulator:
         while self.event_queue:
 
             time, func, args = heapq.heappop(self.event_queue)
-            print(f'func>>>{func}')
+            # print(f'func>>>{func}')
 
             self.current_time = time
             func(*args)
@@ -41,6 +41,6 @@ class Simulator:
     def add_router(self, router_id, queue_size):
         self.routers[router_id] = r.Router(router_id, queue_size, self)
 
-    def add_link(self, link_id, connected_nodes, propagation_speed=2e8, transmission_rate=1000):
+    def add_link(self, link_id, connected_nodes, distance, propagation_speed=2e8, transmission_rate=1000):
         self.links[link_id] = l.Link(
-            connected_nodes, propagation_speed, transmission_rate)
+            connected_nodes, distance, propagation_speed, transmission_rate)
