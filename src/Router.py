@@ -1,4 +1,3 @@
-import Event as e
 import random
 
 
@@ -33,6 +32,8 @@ class Router:
         transmission_delay = link.transmission_delay(self.queue, bitrate)
         propagation_delay = link.propagation_delay()
 
+        print(f'Transmission rate: {bitrate}bps')
+
         # temps d'arrivée
         total_delay += transmission_delay + \
             propagation_delay + (0.02 * len(self.queue))
@@ -61,24 +62,23 @@ class Router:
     def receive_packet_tcp(self, packet_data):
         processing_time = random.uniform(0.04, 0.08)
         cwnd, total_delay, packets, is_aimd = packet_data
-        print(f'ROUTER: {self.router_id}')
+        print(f'ROUTER: {self.router_id}| size: {self.queue_size}')
 
         drp_packets = []
+        if (self.queue_size >= len(packets)):
+            self.queue.extend(packets)
         if (self.queue_size < len(packets)):
-            i = 0
             for packet in packets:
-                if (len(self.queue) < self.queue_size):
-                    print(f'QUEUE | QUEUE_SIZE:{i} {
-                          len(self.queue)}  {self.queue_size}')
 
+                if (len(self.queue) < self.queue_size):
                     self.queue.append(packet)
-                else:
+                elif (len(self.queue) >= self.queue_size):
                     drp_packets.append(packet)
                     if (is_aimd):
+                        self.pos -= 1
+                        if (self.pos == -1):
+                            self.pos = 0
                         cwnd.decrease_window()
-
-        else:
-            self.queue.extend(packets)
 
         print(f'Dropped packet(s): {drp_packets}')
         print(f'Congestion window size: {
@@ -102,24 +102,24 @@ class Router:
 
         # temps de départ
         total_delay += random.uniform(0.10, 0.15)
-        self.simulator.res.append(f'{total_delay:.2f}   ')
+        self.simulator.res.append(f'{total_delay:.2f}  ')
 
         total_delay += processing_time
 
         # la position du paquet dans la file d’attente et si le paquet a été jeté
-        self.process_packet_tcp()
+        is_processed = self.process_packet_tcp(drp_packets)
+        if (self.pos+1 < self.queue_size):
+            self.pos += 1
 
         self.queue.clear()
 
-        # Retransmissions
+        return cwnd, total_delay, drp_packets, is_aimd, is_processed
+
+    def process_packet_tcp(self, drp_packets):
         if (len(drp_packets)):
-            print(f"Retransmissiting packet(s): {drp_packets}")
-            self.simulator.res.append(f"\n \t\t\t  ")
-            self.receive_packet_tcp((cwnd, total_delay, drp_packets, is_aimd))
+            self.simulator.res.extend(
+                [f'{self.pos}  ',   "Yes ", "-.--\n", "\t\t\t\t      No  "])
+        else:
+            self.simulator.res.extend([f'{self.pos}  ',   "No "])
 
-        return total_delay
-
-    def process_packet_tcp(self):
-
-        self.simulator.res.extend([f'{self.pos}   No '])
-        self.pos += 1
+        return True

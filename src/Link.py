@@ -1,5 +1,5 @@
 class Link:
-    def __init__(self, connected_nodes, distance=5, propagation_speed=2e8, transmission_rate=1000):
+    def __init__(self, connected_nodes, distance=5, propagation_speed=2e8, transmission_rate=1):
         self.distance = distance
         self.connected_nodes = connected_nodes
         self.propagation_speed = propagation_speed

@@ -17,8 +17,8 @@ class Host:
             event, (destination, packets, is_tcp, is_aimd))
 
     def tcp(self, packets, is_aimd):
-        tcp = t.TCP(self.host_id, self.simulator, packets)
-        tcp.start_transmission(is_aimd, self.total_delay)
+        tcp = t.TCP(self.host_id, self.simulator)
+        tcp.start_transmission(is_aimd, self.total_delay, packets)
 
     def start_transmission(self, destination, packets, is_tcp=True, is_aimd=True):
 
@@ -90,6 +90,7 @@ class Host:
             nodes.extend(link.get_nodes())
 
         idx = 0
+        is_dep = []
         for (node_id, node_type, side) in nodes:
 
             if (idx == 0):
@@ -98,20 +99,18 @@ class Host:
                 if (node_type == 'router'):
                     if (side == "r"):
                         self.simulator.columns.append(f"arR{node_id}")
-                    else:
+                    elif (side == "s" and (node_id not in is_dep)):
                         self.simulator.columns.extend(
                             [f"dépR{node_id}", "pos", "drp"])
+                        is_dep.append(node_id)
 
-                else:
+                if (node_type == 'host'):
                     if (side == "s"):
                         self.simulator.columns.append(f"dép{node_id}")
-                    if (is_tcp):
-                        last_node = nodes[-1]
-                        last_node_id = last_node[0]
-                        if (last_node_id == node_id):
-                            self.simulator.columns.append(
-                                f'ack ar{last_node_id}')
-                    else:
-                        self.simulator.columns.append(f"ar{node_id}")
+                    elif (side == "r"):
+                        if (is_tcp):
+                            self.simulator.columns.append(f'ack ar{node_id}')
+                        else:
+                            self.simulator.columns.append(f"ar{node_id}")
 
             idx += 1
