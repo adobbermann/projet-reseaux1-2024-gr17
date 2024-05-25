@@ -11,7 +11,7 @@ class TCP:
         self.drp_packets = []
 
     def start_retransmission(self, is_aimd, total_delay, nodes, drp_packets=[]):
-        print("Starting REtransmission TCP+AIMD...")
+        print("Starting REtransmission TCP...")
         print(f'Remaining packet(s): {drp_packets}')
 
         packets_flow = []
@@ -94,7 +94,7 @@ class TCP:
         if (len(packets_flow) > 1):
             print(f"Launching pipelining...\n")
         drp = []
-        node = ()
+
         # envoyer le paquet à chaque nœud du chemin
         for id, type, s in nodes:
             if type == 'router' and s == 'r':
@@ -104,8 +104,6 @@ class TCP:
                 cwnd, total_delay, drp_packets, is_aimd, is_processed = router.receive_packet_tcp(
                     (self.cwnd, total_delay, packets_flow, is_aimd))
                 drp = drp_packets
-                if (len(drp)):
-                    node = (id, type, s)
 
             else:
 
@@ -119,9 +117,8 @@ class TCP:
                         [f'{self.packet_id} ', f'{total_delay:.2f} '])
                     self.packet_id += 1
 
+                # imprimer les acks
                 if (type == 'host' and s == 'r'):
-
-                    # imprimer les acks
                     self.simulator.res.append(
                         f'Yes {total_delay+0.2:.2f} ')
 
@@ -135,6 +132,9 @@ class TCP:
                         self.simulator.res.append('\n')
 
         if (len(drp)):
+            print(f'nodes: {nodes}')
+            print(f'len(nodes): {len(nodes)}')
+
             total_delay = self.start_retransmission(
                 is_aimd, total_delay, nodes, drp)
 

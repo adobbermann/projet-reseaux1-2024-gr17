@@ -10,17 +10,18 @@ class Host:
         self.packet = None
         self.simulator = simulator
         self.total_delay = 0
+        self.packet_id = 0
 
-    def send_packet(self,  destination, packets, is_tcp=True, is_aimd=True):
+    def send_packet(self,  destination, packets, is_tcp=True, is_aimd=True, interval_enabled=True):
         event = e.Event(self.simulator.time(), self.start_transmission)
         self.simulator.schedule_event(
-            event, (destination, packets, is_tcp, is_aimd))
+            event, (destination, packets, is_tcp, is_aimd, interval_enabled))
 
     def tcp(self, packets, is_aimd):
         tcp = t.TCP(self.host_id, self.simulator)
         tcp.start_transmission(is_aimd, self.total_delay, packets)
 
-    def start_transmission(self, destination, packets, is_tcp=True, is_aimd=True):
+    def start_transmission(self, destination, packets, is_tcp, is_aimd, interval_enabled):
 
         self.create_columns(is_tcp)
         # tcp mechanism
@@ -29,30 +30,26 @@ class Host:
             return
 
         print("\nStarting transmission...")
-        print(f'Packet(s): {packets}\n')
+        print(f'Packet(s): {packets}')
 
-        l1 = self.simulator.links[1]
-        bitrate = l1.transmission_rate
         nodes = []
+        link = self.simulator.links[1]
+        lowest_bitrate = link.transmission_rate
         for link_id, obj in self.simulator.links.items():
             link = self.simulator.links[link_id]
-            bitrate = min(bitrate, link.transmission_rate)
+            lowest_bitrate = min(
+                lowest_bitrate, link.transmission_rate)
             nodes.extend(link.get_nodes())
 
         total_delay = 0
-        for pid, packet in enumerate(packets):
-            transmission_delay = link.transmission_delay([packet], bitrate)
-            propagation_delay = link.propagation_delay()
-
-            # ajouter l'index du paquet et le délai total au résultat
-            self.simulator.res.extend([f'{pid} ', f'{total_delay:.2f} '])
-
-            # envoyer le paquet à chaque nœud du chemin
+        interval = 0
+        if not interval_enabled:
             for node_id, node_type, side in nodes:
 
                 if node_type == 'router' and side == 'r':
                     router = self.simulator.routers[node_id]
-                    total_delay = router.receive_packet((total_delay, packet))
+                    total_delay = router.receive_packet(
+                        (total_delay, packets, lowest_bitrate))
 
                     if (self.simulator.res[-1].strip() == "Yes"):
                         self.end_transmission(destination, total_delay)
@@ -68,7 +65,41 @@ class Host:
                             self.end_transmission(destination, total_delay)
                             break
 
-            total_delay = transmission_delay + propagation_delay + 0.02
+        if interval_enabled:
+            for pid, packet in enumerate(packets):
+                packet_size = (len(packet)*8)
+                interval = packet_size / \
+                    (lowest_bitrate * 1e6) if interval_enabled else 0
+
+                # envoyer le paquet à chaque nœud du chemin
+                for node_id, node_type, side in nodes:
+
+                    if node_type == 'router' and side == 'r':
+                        router = self.simulator.routers[node_id]
+                        total_delay = router.receive_packet(
+                            (total_delay, [packet], lowest_bitrate))
+
+                        if (self.simulator.res[-1].strip() == "Yes"):
+                            self.end_transmission(destination, total_delay)
+                            break
+                else:
+                    # pid du packet
+                    if (node_type == 'host' and side == 's'):
+                        self.simulator.res.append(
+                            f'{total_delay+0.2:.2f} ')
+
+                        # calculer l'heure d'arrivée et de départ des hôtes
+                        last_node = nodes[-1]
+                        last_node_id = last_node[0]
+
+                        # s'il s'agit du dernier nœud, ajouter l'heure d'arrivée et interrompre l'opération
+                        if last_node_id == node_id:
+                            self.end_transmission(
+                                destination, total_delay)
+                            break
+
+            print(F'\nINTERVAL: {interval}s')
+            time.sleep(interval)
 
     def end_transmission(self, destination, total_delay):
 
@@ -79,8 +110,6 @@ class Host:
 
         if (self.simulator.res[-1].strip() == "Yes"):
             self.simulator.res.append("-.-- \n")
-        else:
-            self.simulator.res.append(f"{total_delay+0.20:.2f}\n")
 
     def create_columns(self, is_tcp):
 
