@@ -20,7 +20,8 @@ class Router:
 
     def receive_packet(self, packet_data, is_drp=False):
         self.queue.clear()
-        self.counter = 1
+        arrival_time = 0
+        dep_time = 0
 
         processing_time = random.uniform(0.01, 0.02)
         total_delay, packets, lowest_bitrate = packet_data
@@ -40,17 +41,40 @@ class Router:
 
         print(f'Dropped packet(s): {drp_packets}')
 
-        link = self.simulator.links[self.counter]
-        bitrate = link.transmission_rate
-
-        transmission_delay = link.transmission_delay(self.queue, bitrate)
-        propagation_delay = link.propagation_delay()
-        print(f'\nLINK: {self.counter}')
-        print(f'Transmission rate: {bitrate}bps')
-
         print(f'QUEUE: {self.queue}\n')
         for packet in self.queue:
+            packet_size = (len(packet)*8)
+            interval = packet_size / (lowest_bitrate * 1e6)
 
+            for i in range(len(self.simulator.links.items())):
+                print(f'LINK: {self.counter}')
+
+                if (self.counter > len(self.simulator.links.items())):
+                    break
+                link = self.simulator.links[self.counter]
+
+                transmission_delay = link.transmission_delay(
+                    packet, link.transmission_rate)
+                propagation_delay = link.propagation_delay()
+
+                # temps d'arrivée
+                arrival_time = (transmission_delay + propagation_delay)
+
+                # temps de départ
+                dep_time = (arrival_time + processing_time)
+
+                if (len(self.simulator.links.items()) <= self.counter):
+                    self.counter = 1
+                else:
+                    self.counter += 1
+
+                print(f'transmission_delay ::: {transmission_delay}ms')
+                print(f'propagation_delay ::: {propagation_delay}ms')
+                print(
+                    f'transmission_delay + propagation_delay>>>> {transmission_delay + propagation_delay}\n')
+
+            print(F'INTERVAL: {interval*len(self.queue)
+                               }s | bitrate: {lowest_bitrate}')
             # ajouter l'index du paquet et le délai total au résultat
             if (self.packet_id != 0):
                 total_delay -= random.uniform(0.01, 0.03)
@@ -60,24 +84,15 @@ class Router:
                 self.simulator.res.extend(
                     [f'{self.packet_id} ', f'{total_delay:.2f} '])
 
-            link = self.simulator.links[self.counter]
-
-            transmission_delay = link.transmission_delay(
-                self.queue, link.transmission_rate)/2
-            propagation_delay = link.propagation_delay()
-            print(f'transmission_delay ::: {transmission_delay}')
-            print(f'propagation_delay ::: {propagation_delay}')
-            print(
-                f'transmission_delay + propagation_delay>>>> {transmission_delay + propagation_delay}')
-
-            # temps d'arrivée
-            total_delay += (transmission_delay +
-                            propagation_delay)
-            self.simulator.res.append(f'{total_delay:.2f} ')
-
-            # temps de départ
-            total_delay += processing_time
-            self.simulator.res.append(f'{total_delay:.2f}  ')
+                # la position du paquet dans la file d’attente et si le paquet a été jeté
+            if (self.pos < self.queue_size-1):
+                self.pos += 1
+            else:
+                self.pos = 0
+            self.packet_id += 1
+            self.simulator.res.append(f'{arrival_time+total_delay:.2f} ')
+            self.simulator.res.append(f'{dep_time+total_delay:.2f}  ')
+            total_delay += (arrival_time + dep_time)
 
             if (is_drp):
                 self.simulator.res.extend(
@@ -85,14 +100,6 @@ class Router:
             else:
                 total_delay += processing_time
                 self.process_packet(total_delay)
-
-            # # la position du paquet dans la file d’attente et si le paquet a été jeté
-            if (self.pos < self.queue_size-1):
-                self.pos += 1
-            else:
-                self.pos = 0
-            self.packet_id += 1
-            self.counter += 1
 
         if (len(drp_packets)):
             self.receive_packet(
@@ -133,9 +140,11 @@ class Router:
 
         l1 = self.simulator.links[1]
         bitrate = l1.transmission_rate
+        nodes = []
         for link_id, obj in self.simulator.links.items():
             link = self.simulator.links[link_id]
             bitrate = min(bitrate, link.transmission_rate)
+            nodes.extend(link.get_nodes())
 
         transmission_delay = link.transmission_delay(self.queue, bitrate)
         propagation_delay = link.propagation_delay()
@@ -152,7 +161,7 @@ class Router:
         total_delay += processing_time
 
         # la position du paquet dans la file d’attente et si le paquet a été jeté
-        is_processed = self.process_packet_tcp(drp_packets)
+        is_processed = self.process_packet_tcp(drp_packets, nodes)
         if (self.pos+1 < self.queue_size):
             self.pos += 1
 
@@ -160,10 +169,15 @@ class Router:
 
         return cwnd, total_delay, drp_packets, is_aimd, is_processed
 
-    def process_packet_tcp(self, drp_packets):
+    def process_packet_tcp(self, drp_packets, nodes):
+
         if (len(drp_packets)):
-            self.simulator.res.extend(
-                [f'{self.pos}  ',   "Yes ", "-.--\n", "\t\t\t\t      No "])
+            self.simulator.res.extend([f'{self.pos}  ',   "Yes ", "-.--\n"])
+
+            for i in range(len(nodes)-2):
+                self.simulator.res.append('\t      ')
+
+            self.simulator.res.append("No ")
         else:
             self.simulator.res.extend([f'{self.pos}  ',   "No "])
 

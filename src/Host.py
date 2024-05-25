@@ -42,64 +42,34 @@ class Host:
             nodes.extend(link.get_nodes())
 
         total_delay = 0
-        interval = 0
-        if not interval_enabled:
-            for node_id, node_type, side in nodes:
 
-                if node_type == 'router' and side == 'r':
-                    router = self.simulator.routers[node_id]
+        for node_id, node_type, side in nodes:
+
+            if node_type == 'router' and side == 'r':
+                router = self.simulator.routers[node_id]
+
+                # rafales
+                if interval_enabled:
                     total_delay = router.receive_packet(
                         (total_delay, packets, lowest_bitrate))
-
-                    if (self.simulator.res[-1].strip() == "Yes"):
-                        self.end_transmission(destination, total_delay)
-                        break
                 else:
-                    if (node_type == 'host' and side == 'r'):
-                        # calculer l'heure d'arrivée et de départ des hôtes
-                        last_node = nodes[-1]
-                        last_node_id = last_node[0]
-
-                        # s'il s'agit du dernier nœud, ajouter l'heure d'arrivée et interrompre l'opération
-                        if last_node_id == node_id:
-                            self.end_transmission(destination, total_delay)
-                            break
-
-        if interval_enabled:
-            for pid, packet in enumerate(packets):
-                packet_size = (len(packet)*8)
-                interval = packet_size / \
-                    (lowest_bitrate * 1e6) if interval_enabled else 0
-
-                # envoyer le paquet à chaque nœud du chemin
-                for node_id, node_type, side in nodes:
-
-                    if node_type == 'router' and side == 'r':
-                        router = self.simulator.routers[node_id]
+                    for packet in packets:
                         total_delay = router.receive_packet(
                             (total_delay, [packet], lowest_bitrate))
 
-                        if (self.simulator.res[-1].strip() == "Yes"):
-                            self.end_transmission(destination, total_delay)
-                            break
-                else:
-                    # pid du packet
-                    if (node_type == 'host' and side == 's'):
-                        self.simulator.res.append(
-                            f'{total_delay+0.2:.2f} ')
+                if (self.simulator.res[-1].strip() == "Yes"):
+                    self.end_transmission(destination, total_delay)
+                    break
+            else:
+                if (node_type == 'host' and side == 'r'):
+                    # calculer l'heure d'arrivée et de départ des hôtes
+                    last_node = nodes[-1]
+                    last_node_id = last_node[0]
 
-                        # calculer l'heure d'arrivée et de départ des hôtes
-                        last_node = nodes[-1]
-                        last_node_id = last_node[0]
-
-                        # s'il s'agit du dernier nœud, ajouter l'heure d'arrivée et interrompre l'opération
-                        if last_node_id == node_id:
-                            self.end_transmission(
-                                destination, total_delay)
-                            break
-
-            print(F'\nINTERVAL: {interval}s')
-            time.sleep(interval)
+                    # s'il s'agit du dernier nœud, ajouter l'heure d'arrivée et interrompre l'opération
+                    if last_node_id == node_id:
+                        self.end_transmission(destination, total_delay)
+                        break
 
     def end_transmission(self, destination, total_delay):
 

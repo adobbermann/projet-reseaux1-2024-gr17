@@ -16,7 +16,7 @@ class Link:
                 bits += len(packet)*8
         else:
             bits += len(packets[0])*8
-
+        print(f'Packets: {packets} | bits: {bits} | bitrate: {bitrate}')
         return bits / bitrate
 
     def get_nodes(self):

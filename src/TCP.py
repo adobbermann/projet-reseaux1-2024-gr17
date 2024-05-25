@@ -132,8 +132,8 @@ class TCP:
                         self.simulator.res.append('\n')
 
         if (len(drp)):
-            print(f'nodes: {nodes}')
-            print(f'len(nodes): {len(nodes)}')
+            # print(f'nodes: {nodes}')
+            # print(f'len(nodes): {len(nodes)}')
 
             total_delay = self.start_retransmission(
                 is_aimd, total_delay, nodes, drp)
